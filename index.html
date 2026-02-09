@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Забытые Истории</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ФОН - можно выключить */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.3;
+            /* ВЫКЛЮЧИТЬ: display: none; */
+        }
+
+        .interface {
+            position: relative;
+            z-index: 10;
+            max-width: 100%;
+            padding: 20px 16px;
+            min-height: 100vh;
+        }
+
+        .fragment {
+            background: transparent;
+            margin: 0 0 40px 0;
+            padding: 0;
+        }
+
+        /* КАРТИНКА */
+        .fragment-image {
+            width: 100%;
+            height: auto;
+            margin: 0 0 20px 0;
+            display: block;
+            border-radius: 8px;
+            opacity: 0.95;
+        }
+
+        .fragment-text {
+            font-size: 17px;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .clue {
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .clue:hover {
+            border-bottom-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .choice {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            border-radius: 8px;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .choice:active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0.98);
+        }
+
+        @media (hover: hover) {
+            .choice:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        .title {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 32px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .score {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            z-index: 100;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .revelation {
+            color: rgba(255, 255, 255, 0.95);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .memory-echo {
+            color: rgba(200, 180, 255, 0.9);
+            font-style: italic;
+        }
+
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s;
+        }
+
+        .audio-control:active {
+            transform: scale(0.95);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* МОБИЛЬНАЯ ОПТИМИЗАЦИЯ */
+        @media (max-width: 768px) {
+            .interface {
+                padding: 16px 12px;
+            }
+
+            .fragment-text {
+                font-size: 16px;
+                line-height: 1.65;
+            }
+
+            .title {
+                font-size: 20px;
+                margin-bottom: 24px;
+            }
+
+            .choice {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .score {
+                top: 12px;
+                right: 12px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .audio-control {
+                bottom: 16px;
+                right: 12px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+
+        /* ОЧЕНЬ МАЛЕНЬКИЕ ЭКРАНЫ */
+        @media (max-width: 380px) {
+            .fragment-text {
+                font-size: 15px;
+            }
+
+            .title {
+                font-size: 18px;
+                letter-spacing: 1px;
+            }
+
+            .choice {
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ФОН -->
+    <canvas id="canvas"></canvas>
+    
+    <div class="score">
+        <span id="awakening">0</span>
+    </div>
+
+    <!-- МУЗЫКА -->
+    <div class="audio-control" onclick="toggleAudio()">
+        <span id="audio-status">♪</span>
+    </div>
+
+    <!-- ФОНОВАЯ МУЗЫКА: положи background.mp3 в папку -->
+    <audio id="bgMusic" loop>
+        <source src="background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="interface">
+        <h1 class="title">ЗАБЫТЫЕ ИСТОРИИ</h1>
+        <div id="game-container"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // МУЗЫКА
+        // ==========================================
+        const bgMusic = document.getElementById('bgMusic');
+        let musicPlaying = false;
+
+        function toggleAudio() {
+            if (musicPlaying) {
+                bgMusic.pause();
+                document.getElementById('audio-status').textContent = '♪';
+                musicPlaying = false;
+            } else {
+                bgMusic.play();
+                document.getElementById('audio-status').textContent = '♫';
+                musicPlaying = true;
+            }
+        }
+
+        document.addEventListener('click', function autoStart() {
+            if (!musicPlaying) {
+                bgMusic.play();
+                musicPlaying = true;
+                document.getElementById('audio-status').textContent = '♫';
+            }
+            document.removeEventListener('click', autoStart);
+        }, { once: true });
+
+        // ==========================================
+        // ФОН
+        // ==========================================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const particles = [];
+        for (let i = 0; i < 30; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                size: Math.random() * 1.5 + 0.5
+            });
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.2 + Math.random() * 0.2})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // ==========================================
+        // ИГРА
+        // ==========================================
+        let awakening = 0;
+        let loopCount = 0;
+
+        // ФРАГМЕНТЫ - положи картинки в папку
+        const fragments = [
+            {
+                image: 'fragment_0.jpg',
+                text: 'Вы находите <span class="clue">старую фотографию</span> на чердаке. На ней двое людей стоят у моста, который <span class="revelation">больше не существует</span>. Дата на обороте: 15 марта 2023. Но мост снесли в 2021...',
+                choices: [
+                    { text: 'Изучить лица на фотографии', next: 1 },
+                    { text: 'Найти информацию о мосте', next: 2 },
+                    { text: 'Перевернуть и прочитать надпись', next: 3 }
+                ]
+            },
+            {
+                image: 'fragment_1.jpg',
+                text: 'Лицо женщины кажется <span class="clue">знакомым</span>. Где-то вы видели эти глаза раньше. Может быть в зеркале? Нет... В сновидении, которое повторяется каждый четверг. Она смотрит не в камеру, а <span class="revelation">сквозь время</span>.',
+                choices: [
+                    { text: 'Закрыть глаза и вспомнить сон', next: 4 },
+                    { text: 'Искать её в соцсетях', next: 5 }
+                ]
+            },
+            {
+                image: 'fragment_2.jpg',
+                text: 'В архивах города - <span class="clue">противоречие</span>. Мост действительно снесли в 2021. Но есть отчёт о ремонтных работах от 2024 года. Подпись инженера неразборчива, но вы различаете инициалы: те же, что и у вашего <span class="revelation">будущего ребёнка</span>, которого ещё нет.',
+                choices: [
+                    { text: 'Это невозможно... или?', next: 6 },
+                    { text: 'Проверить другие документы', next: 7 }
+                ]
+            },
+            {
+                image: 'fragment_3.jpg',
+                text: 'На обороте: "<span class="clue">Мы были здесь дважды. Первый раз - когда встретились. Второй - когда решили не встречаться. Время помнит оба варианта</span>". Подпись размыта водой... или слезами.',
+                choices: [
+                    { text: 'Что это значит?', next: 8 }
+                ]
+            },
+            {
+                image: 'fragment_4.jpg',
+                text: 'В сновидении вы всегда стоите на <span class="revelation">том же мосту</span>. Она протягивает руку и говорит: "Ты опоздал на семь минут. Или на три года. Время тут работает странно". И вы просыпаетесь ровно в <span class="clue">3:33</span>.',
+                choices: [
+                    { text: 'Проснуться в игре', next: 9 }
+                ]
+            },
+            {
+                image: 'fragment_5.jpg',
+                text: 'Аккаунт существует. Последний пост - <span class="clue">вчера</span>. Фотография того же моста. Комментарий: "Снова здесь. Но ты не пришёл. Значит, в этой версии мы не встретились". Ваша рука тянется ответить, но вы <span class="revelation">не помните, знали ли вы её</span>.',
+                choices: [
+                    { text: 'Написать "Я здесь"', next: 10 }
+                ]
+            },
+            {
+                image: 'fragment_6.jpg',
+                text: '<span class="revelation">Понимание</span> приходит как волна. Каждое решение создаёт развилку. Мост существует и не существует. Вы встретились и не встретились. Игра - это не воспоминание. Это <span class="clue">выбор, который вы делаете сейчас</span>.',
+                choices: [
+                    { text: 'Принять все версии', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_7.jpg',
+                text: 'В каждом документе - ваша подпись. В 2019, 2022, 2025. Вы работали на этом проекте, не работали, будете работать. <span class="revelation">Все версии истинны</span>. Вопрос не "что произошло", а "что вы выберете".',
+                choices: [
+                    { text: 'Выбрать встречу', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_8.jpg',
+                text: 'Надпись означает <span class="clue">суперпозицию</span>. До момента выбора существуют обе реальности. Встреча и расставание. Мост и пустота. Вы и она. Фотография - это коллапс одной из волновых функций. Но <span class="revelation">какой</span>?',
+                choices: [
+                    { text: 'Наблюдать дальше', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_9.jpg',
+                text: 'Вы просыпаетесь. На часах 3:33. Телефон показывает <span class="clue">пропущенный звонок</span> в 3:26 - ровно семь минут назад. Неизвестный номер. Голосовое сообщение: "Я жду у моста. У того, которого нет. Приходи <span class="revelation">в правильное время</span>".',
+                choices: [
+                    { text: 'Идти к мосту', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_10.jpg',
+                text: 'Ответ приходит мгновенно: "<span class="clue">Наконец-то. Я ждала. В этой версии ты написал. Значит, мы встретимся. Мост появится в 15:47. Не опоздай на этот раз</span>". Время сейчас - 15:40. До <span class="revelation">развилки</span> семь минут.',
+                choices: [
+                    { text: 'Бежать к месту, где был мост', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_11.jpg',
+                text: '',
+                textFirst: '<span class="revelation">Вы стоите там, где должен быть мост</span>. 15:47. Воздух дрожит. Из складок времени проступает контур. <span class="clue">Она</span> стоит на другом берегу. Протягивает руку. "В этой версии мы встретились. Но помни - каждый выбор создаёт новую историю. И где-то, в другой линии, я всё ещё жду". Вы делаете шаг вперёд.',
+                textLoop: '<span class="memory-echo">Вы снова здесь. Мост узнаёт вас.</span> Она стоит на том же месте, но её глаза другие - <span class="revelation">в них память всех предыдущих раз</span>. "Ты вернулся", - шепчет она. "Сколько раз ты будешь идти ко мне?" <span class="clue">Столько, сколько нужно</span>, - отвечаете вы, не произнося слов вслух. Потому что она и так знает. <span class="memory-echo">Вы оба помните.</span>',
+                choices: [
+                    { text: 'Начать сначала, помня всё', next: 0 }
+                ]
+            }
+        ];
+
+        function showFragment(index) {
+            awakening++;
+            document.getElementById('awakening').textContent = awakening;
+
+            const container = document.getElementById('game-container');
+            const fragment = fragments[index];
+
+            let displayText = fragment.text;
+            if (index === 11) {
+                loopCount++;
+                displayText = loopCount === 1 ? fragment.textFirst : fragment.textLoop;
+            }
+
+            container.innerHTML = `
+                <div class="fragment">
+                    <img src="${fragment.image}" alt="Сцена ${index}" class="fragment-image">
+                    <div class="fragment-text">${displayText}</div>
+                    <div class="choice-container">
+                        ${fragment.choices.map((choice, i) => `
+                            <div class="choice" onclick="showFragment(${choice.next})">
+                                ${choice.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        showFragment(0);
+    </script>
+</body>
+</html>
