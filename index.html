@@ -17,6 +17,9 @@
             color: #fff;
             overflow-x: hidden;
             line-height: 1.6;
+            user-select: none;
+            -webkit-user-drag: none;
+            overflow: hidden;
         }
 
         /* ФОН - можно выключить */
@@ -257,6 +260,53 @@
                 font-size: 13px;
             }
         }
+
+        /* TRANSITIONS */
+        .fragment {
+            animation: sceneFadeIn 0.8s ease forwards;
+        }
+
+        .fade-out {
+            animation: sceneFadeOut 0.5s ease forwards;
+        }
+
+        @keyframes sceneFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(1.03);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes sceneFadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+        }
+
+        .fragment-text {
+            animation: textFadeIn 1s ease 0.3s forwards;
+            opacity: 0;
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -355,6 +405,18 @@
         }
         animate();
 
+        // ==========================================
+        // PRELOAD IMAGES
+        // ==========================================
+        const preloadedImages = [];
+
+        function preloadImages() {
+            fragments.forEach(f => {
+                const img = new Image();
+                img.src = f.image;
+                preloadedImages.push(img);
+            });
+        }
         // ==========================================
         // ИГРА
         // ==========================================
@@ -456,35 +518,44 @@
         ];
 
         function showFragment(index) {
-            awakening++;
-            document.getElementById('awakening').textContent = awakening;
-
             const container = document.getElementById('game-container');
-            const fragment = fragments[index];
+            const current = container.firstElementChild;
 
-            let displayText = fragment.text;
-            if (index === 11) {
-                loopCount++;
-                displayText = loopCount === 1 ? fragment.textFirst : fragment.textLoop;
+            if (current) {
+                current.classList.add('fade-out');
             }
 
-            container.innerHTML = `
-                <div class="fragment">
-                    <img src="${fragment.image}" alt="Сцена ${index}" class="fragment-image">
-                    <div class="fragment-text">${displayText}</div>
-                    <div class="choice-container">
-                        ${fragment.choices.map((choice) => `
-                            <div class="choice" onclick="showFragment(${choice.next})">
-                                ${choice.text}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            setTimeout(() => {
+                awakening++;
+                document.getElementById('awakening').textContent = awakening;
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+                const fragment = fragments[index];
+
+                let displayText = fragment.text;
+                if (index === 11) {
+                    loopCount++;
+                    displayText = loopCount === 1 ? fragment.textFirst : fragment.textLoop;
+                }
+
+                container.innerHTML = `
+                    <div class="fragment">
+                        <img src="${fragment.image}" alt="Сцена ${index}" class="fragment-image">
+                        <div class="fragment-text">${displayText}</div>
+                        <div class="choice-container">
+                            ${fragment.choices.map((choice) => `
+                                <div class="choice" onclick="showFragment(${choice.next})">
+                                    ${choice.text}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, current ? 450 : 0);
         }
 
+        preloadImages();
         showFragment(0);
     </script>
 </body>
