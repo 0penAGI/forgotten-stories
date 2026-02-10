@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -331,7 +331,7 @@
     </audio>
 
     <div class="interface">
-        <h1 class="title">ЗАБЫТЫЕ ИСТОРИИ</h1>
+        <h1 class="title" id="game-title"></h1>
         <div id="game-container"></div>
     </div>
 
@@ -425,11 +425,17 @@
         // ==========================================
         let awakening = 0;
         let loopCount = 0;
-        let currentLang = 'ru';
+        const browserLang = (navigator.language || navigator.userLanguage || 'ru').toLowerCase();
+        let currentLang = browserLang.startsWith('ru') ? 'ru' : 'en';
+        const titles = {
+            ru: 'ЗАБЫТЫЕ ИСТОРИИ',
+            en: 'FORGOTTEN STORIES'
+        };
 
         function toggleLang() {
             currentLang = currentLang === 'ru' ? 'en' : 'ru';
             document.getElementById('lang-status').textContent = currentLang.toUpperCase();
+            document.getElementById('game-title').textContent = titles[currentLang];
             showFragment(currentIndex);
         }
 
@@ -668,6 +674,8 @@
 
         preloadImages();
         document.getElementById('lang-status').textContent = currentLang.toUpperCase();
+        document.documentElement.lang = currentLang;
+        document.getElementById('game-title').textContent = titles[currentLang];
         showFragment(0);
     </script>
 </body>
