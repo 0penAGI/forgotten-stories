@@ -316,6 +316,9 @@
     <div class="score">
         <span id="awakening">0</span>
     </div>
+    <div class="audio-control" style="left:20px; right:auto;" onclick="toggleLang()">
+        <span id="lang-status">RU</span>
+    </div>
 
     <!-- МУЗЫКА -->
     <div class="audio-control" onclick="toggleAudio()">
@@ -411,7 +414,7 @@
         const preloadedImages = [];
 
         function preloadImages() {
-            fragments.forEach(f => {
+            [...fragmentsRU, ...fragmentsEN].forEach(f => {
                 const img = new Image();
                 img.src = f.image;
                 preloadedImages.push(img);
@@ -422,9 +425,18 @@
         // ==========================================
         let awakening = 0;
         let loopCount = 0;
+        let currentLang = 'ru';
+
+        function toggleLang() {
+            currentLang = currentLang === 'ru' ? 'en' : 'ru';
+            document.getElementById('lang-status').textContent = currentLang.toUpperCase();
+            showFragment(currentIndex);
+        }
+
+        let currentIndex = 0;
 
         // ФРАГМЕНТЫ - положи картинки в папку
-        const fragments = [
+        const fragmentsRU = [
             {
                 image: 'fragment_0.JPG',
                 text: 'Вы находите <span class="clue">старую фотографию</span> на чердаке. На ней двое людей стоят у моста, который <span class="revelation">больше не существует</span>. Дата на обороте: 15 марта 2023. Но мост снесли в 2021...',
@@ -517,6 +529,103 @@
             }
         ];
 
+        const fragmentsEN = [
+            {
+                image: 'fragment_0.JPG',
+                text: 'You find an <span class="clue">old photograph</span> in the attic. Two people stand near a bridge that <span class="revelation">no longer exists</span>. Date: March 15, 2023. But the bridge was demolished in 2021...',
+                choices: [
+                    { text: 'Study the faces', next: 1 },
+                    { text: 'Research the bridge', next: 2 },
+                    { text: 'Turn it over', next: 3 }
+                ]
+            },
+            {
+                image: 'fragment_1.JPG',
+                text: 'The woman’s face looks <span class="clue">familiar</span>. You have seen these eyes before. Maybe in a dream. She looks <span class="revelation">through time</span>.',
+                choices: [
+                    { text: 'Recall the dream', next: 4 },
+                    { text: 'Search online', next: 5 }
+                ]
+            },
+            {
+                image: 'fragment_2.JPG',
+                text: 'City archives contain a <span class="clue">contradiction</span>. The bridge was destroyed in 2021, yet a repair report exists from 2024.',
+                choices: [
+                    { text: 'How is this possible?', next: 6 },
+                    { text: 'Check more files', next: 7 }
+                ]
+            },
+            {
+                image: 'fragment_3.JPG',
+                text: '"We were here twice. When we met. And when we chose not to." Time remembers both.',
+                choices: [
+                    { text: 'What does it mean?', next: 8 }
+                ]
+            },
+            {
+                image: 'fragment_4.JPG',
+                text: 'In every dream you stand on <span class="revelation">the same bridge</span>. She says: "You are late."',
+                choices: [
+                    { text: 'Wake up', next: 9 }
+                ]
+            },
+            {
+                image: 'fragment_5.JPG',
+                text: 'Her account exists. Last post: yesterday. "We did not meet in this version."',
+                choices: [
+                    { text: 'Write: I am here', next: 10 }
+                ]
+            },
+            {
+                image: 'fragment_6.JPG',
+                text: '<span class="revelation">Understanding</span> arrives. Every choice creates a branch.',
+                choices: [
+                    { text: 'Accept all versions', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_7.JPG',
+                text: 'Your signature is everywhere. Past. Future. All are true.',
+                choices: [
+                    { text: 'Choose to meet', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_8.JPG',
+                text: 'Until observation, both realities exist. Which will collapse?',
+                choices: [
+                    { text: 'Keep watching', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_9.JPG',
+                text: 'You wake up at 3:33. A missed call waits.',
+                choices: [
+                    { text: 'Go to the bridge', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_10.JPG',
+                text: '"We will meet. Do not be late." Seven minutes remain.',
+                choices: [
+                    { text: 'Run', next: 11 }
+                ]
+            },
+            {
+                image: 'fragment_11.JPG',
+                text: '',
+                textFirst: 'The bridge forms. She reaches out. "In this version, we met."',
+                textLoop: 'You return. The bridge remembers. So does she.',
+                choices: [
+                    { text: 'Begin again', next: 0 }
+                ]
+            }
+        ];
+
+        function getFragments() {
+            return currentLang === 'ru' ? fragmentsRU : fragmentsEN;
+        }
+
         function showFragment(index) {
             const container = document.getElementById('game-container');
             const current = container.firstElementChild;
@@ -529,7 +638,9 @@
                 awakening++;
                 document.getElementById('awakening').textContent = awakening;
 
+                const fragments = getFragments();
                 const fragment = fragments[index];
+                currentIndex = index;
 
                 let displayText = fragment.text;
                 if (index === 11) {
@@ -556,6 +667,7 @@
         }
 
         preloadImages();
+        document.getElementById('lang-status').textContent = currentLang.toUpperCase();
         showFragment(0);
     </script>
 </body>
